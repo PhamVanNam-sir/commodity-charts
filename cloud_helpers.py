@@ -159,9 +159,8 @@ def get_or_create_folder(drive, folder_name, parent_folder_id):
     
 def push_to_github(repo_local_path, github_token, github_username, github_repo_name, commit_message=None):
     """
-    Tự động add, commit, và push các thay đổi trong thư mục repo local lên GitHub.
-    Sử dụng Token để xác thực.
-    (Phiên bản nâng cấp: Tự động pull --rebase trước khi push)
+    Tự động add, commit, và push.
+    (Phiên bản 3: Sửa lỗi 'https' fatal error)
     """
     if commit_message is None:
         commit_message = f"Auto-update charts {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -171,36 +170,38 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
         repo = git.Repo(repo_local_path)
         print(f"  Mở repo thành công tại: {repo_local_path}")
         
-        # 1.5. ĐỒNG BỘ (PULL) TRƯỚC KHI LÀM BẤT CỨ ĐIỀU GÌ
-        # (Rất quan trọng để tránh lỗi "non-fast-forward" trên Actions)
-        print("  Đang đồng bộ (pull) các thay đổi mới nhất từ GitHub...")
+        # 2. Lấy remote 'origin'
         origin = repo.remote(name='origin')
-        
-        # Cấu hình URL với token để pull (và push)
-        remote_url = f"https"
+
+        # 3. TẠO VÀ SET URL XÁC THỰC (SỬA LỖI Ở ĐÂY)
+        # Tạo URL xác thực (https://<token>@github.com/<username>/<repo_name>.git)
+        print("  Đang cấu hình URL xác thực...")
+        remote_url = f"https://{github_token}@github.com/{github_username}/{github_repo_name}.git"
         origin.set_url(remote_url)
-        
-        # Chạy "git pull --rebase"
+        print("  Cấu hình URL thành công.")
+
+        # 4. ĐỒNG BỘ (PULL) TRƯỚC
+        print("  Đang đồng bộ (pull --rebase) các thay đổi...")
         origin.pull(rebase=True) 
         print("  Đồng bộ (pull) thành công.")
         # --- KẾT THÚC BƯỚC ĐỒNG BỘ ---
 
-        # 2. Kiểm tra xem có thay đổi không (do main.py tạo ra)
+        # 5. Kiểm tra xem có thay đổi không (do main.py tạo ra)
         if not repo.is_dirty(untracked_files=True):
             print("  Không có thay đổi nào (file HTML mới) để push. Bỏ qua.")
             return True
 
-        # 3. Thêm tất cả các file (mới hoặc đã sửa)
+        # 6. Thêm tất cả các file (mới hoặc đã sửa)
         print("  Đang thêm (add) tất cả các thay đổi (thư mục charts/)...")
         repo.git.add(A=True)
         
-        # 4. Commit
+        # 7. Commit
         print(f"  Đang commit với message: '{commit_message}'")
         repo.index.commit(commit_message)
         
-        # 5. Push lên GitHub
+        # 8. Push lên GitHub
         print("  Đang push lên GitHub...")
-        # (URL đã được set ở bước 1.5, chỉ cần push)
+        # (URL đã được set ở bước 3, chỉ cần push)
         origin.push()
         
         print("  Push lên GitHub thành công!")
