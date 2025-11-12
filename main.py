@@ -47,7 +47,7 @@ if not GITHUB_TOKEN:
     raise ValueError("LỖI: Không tìm thấy API_TOKEN.")
 HTML_SUBFOLDER = "charts"
 HTML_SAVE_PATH = os.path.join(REPO_LOCAL_PATH, HTML_SUBFOLDER)
-GITHUB_PAGES_URL = f"https{GITHUB_USERNAME}.github.io/{GITHUB_REPO_NAME}/{HTML_SUBFOLDER}/"
+GITHUB_PAGES_URL = f"https://{GITHUB_USERNAME}.github.io/{GITHUB_REPO_NAME}/{HTML_SUBFOLDER}/"
 
 # --- Cấu hình Local-Mode ---
 # (Thư mục sẽ được dùng nếu UPLOAD_FILES = False)
