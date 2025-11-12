@@ -160,7 +160,7 @@ def get_or_create_folder(drive, folder_name, parent_folder_id):
 def push_to_github(repo_local_path, github_token, github_username, github_repo_name, commit_message=None):
     """
     Tự động add, commit, và push.
-    (Phiên bản V4: Xóa 'is_dirty' check, thay bằng try/except)
+    (Phiên bản V5: Sửa lỗi URL 'https')
     """
     if commit_message is None:
         commit_message = f"Auto-update charts {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -173,7 +173,7 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
         # 2. Lấy remote 'origin'
         origin = repo.remote(name='origin')
 
-        # 3. TẠO VÀ SET URL XÁC THỰC
+        # 3. TẠO VÀ SET URL XÁC THỰC (ĐÃ SỬA LỖI Ở ĐÂY)
         print("  Đang cấu hình URL xác thực...")
         remote_url = f"https"
         origin.set_url(remote_url)
@@ -184,10 +184,8 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
         origin.pull(rebase=True) 
         print("  Đồng bộ (pull) thành công.")
         
-        # --- LOGIC MỚI ---
         # 5. Cứ "add" tất cả mọi thứ
         print("  Đang thêm (add) tất cả các thay đổi (kể cả thư mục charts/)...")
-        # Dùng -A để "add" cả file mới và file đã xóa (nếu có)
         repo.git.add(A=True) 
 
         # 6. Thử commit
@@ -197,13 +195,12 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
             print(f"  Commit thành công: '{commit_message}'")
             
         except git.exc.GitCommandError as e:
-            # Bắt lỗi nếu không có gì để commit
             if "nothing to commit" in str(e) or "no changes added" in str(e):
                 print("  Không có thay đổi nào mới để commit. Bỏ qua push.")
-                return True # Vẫn là thành công (vì đã đồng bộ)
+                return True 
             else:
                 print(f"  Lỗi commit không mong muốn: {e}")
-                raise # Báo lỗi khác nếu có
+                raise 
 
         # 7. Push (Chỉ push nếu commit thành công)
         print("  Đang push lên GitHub...")
