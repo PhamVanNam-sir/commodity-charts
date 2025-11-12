@@ -1,0 +1,57 @@
+name: Daily Commodity Report
+
+on:
+  # Chạy tự động lúc 22:00 UTC (tức 5:00 sáng giờ Việt Nam, UTC+7)
+  schedule:
+    - cron: '0 22 * * *'
+  # Cho phép chạy thủ công (để test)
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest # Chạy trên máy ảo Linux (Ubuntu)
+
+    steps:
+      # 1. Lấy code của bạn về
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          # Cần GITHUB_TOKEN để push lại
+          token: ${{ secrets.API_TOKEN }} 
+
+      # 2. Cài đặt Python 3.10
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # 3. Cài đặt các thư viện từ requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # Cài đặt trình duyệt Chrome cho Selenium
+          pip install webdriver-manager
+
+      # 4. TẠO FILE BÍ MẬT (Lấy từ GitHub Secrets)
+      - name: Create Google Auth Files
+        env:
+          CLIENT_SECRETS: ${{ secrets.GDRIVE_CLIENT_SECRETS }}
+          CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+        run: |
+          echo "$CLIENT_SECRETS" > client_secrets.json
+          echo "$CREDENTIALS" > credentials.json
+          echo "Đã tạo file client_secrets.json và credentials.json"
+
+      # 5. Cấu hình Git cho Robot
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "action@github.com"
+
+      # 6. CHẠY SCRIPT CHÍNH
+      - name: Run Main Python Script
+        env:
+          GITHUB_API_TOKEN: ${{ secrets.API_TOKEN }}
+        run: |
+          python main.py
