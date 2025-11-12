@@ -52,6 +52,6 @@ jobs:
       # 6. CHẠY SCRIPT CHÍNH
       - name: Run Main Python Script
         env:
-          GITHUB_API_TOKEN: ${{ secrets.API_TOKEN }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
         run: |
           python main.py
