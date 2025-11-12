@@ -244,7 +244,6 @@ def create_commodity_charts(df,
         if not github_pages_url.endswith('/'):
             github_pages_url += '/'
         print("--- Đang chạy ở chế độ UPLOAD ---")
-        os.makedirs(github_repo_local_path, exist_ok=True)
     else:
         os.makedirs(local_html_folder, exist_ok=True)
         print("--- Đang chạy ở chế độ LOCAL ---")

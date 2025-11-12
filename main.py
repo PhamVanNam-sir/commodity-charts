@@ -42,7 +42,7 @@ ROOT_FOLDER_ID = '1tAeJoC2BiHTV_mTC0KU11ngP7rdcBV-M'
 GITHUB_USERNAME = "PhamVanNam-sir" 
 GITHUB_REPO_NAME = "commodity-charts"
 REPO_LOCAL_PATH = "."
-GITHUB_TOKEN = os.getenv("API_TOKEN")
+GITHUB_TOKEN = "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"
 if not GITHUB_TOKEN:
     raise ValueError("LỖI: Không tìm thấy API_TOKEN.")
 HTML_SUBFOLDER = "charts"
