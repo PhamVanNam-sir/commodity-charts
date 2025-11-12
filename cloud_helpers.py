@@ -157,10 +157,12 @@ def get_or_create_folder(drive, folder_name, parent_folder_id):
         print(f"Đã tạo thư mục con thành công (ID: {new_folder_id})")
         return new_folder_id
     
+# (THAY THẾ TOÀN BỘ HÀM 'push_to_github' CŨ BẰNG HÀM NÀY)
+
 def push_to_github(repo_local_path, github_token, github_username, github_repo_name, commit_message=None):
     """
     Tự động add, commit, và push.
-    (Phiên bản V5: Sửa lỗi URL 'https')
+    (Phiên bản V7: SỬA LỖI URL 'httpss' DỨT ĐIỂM)
     """
     if commit_message is None:
         commit_message = f"Auto-update charts {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -175,7 +177,12 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
 
         # 3. TẠO VÀ SET URL XÁC THỰC (ĐÃ SỬA LỖI Ở ĐÂY)
         print("  Đang cấu hình URL xác thực...")
-        remote_url = f"https"
+        
+        # ========= DÒNG SỬA LỖI QUAN TRỌNG NHẤT ==========
+        # (Đây là dòng bị lỗi 'httpss' trong các phiên bản trước)
+        remote_url = f"https://{github_token}@github.com/{github_username}/{github_repo_name}.git"
+        # ===============================================
+        
         origin.set_url(remote_url)
         print("  Cấu hình URL thành công.")
 
@@ -195,12 +202,13 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
             print(f"  Commit thành công: '{commit_message}'")
             
         except git.exc.GitCommandError as e:
+            # Bắt lỗi nếu không có gì để commit
             if "nothing to commit" in str(e) or "no changes added" in str(e):
                 print("  Không có thay đổi nào mới để commit. Bỏ qua push.")
-                return True 
+                return True # Vẫn là thành công
             else:
                 print(f"  Lỗi commit không mong muốn: {e}")
-                raise 
+                raise # Báo lỗi khác nếu có
 
         # 7. Push (Chỉ push nếu commit thành công)
         print("  Đang push lên GitHub...")
