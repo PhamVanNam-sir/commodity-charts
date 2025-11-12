@@ -161,6 +161,7 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
     """
     Tự động add, commit, và push các thay đổi trong thư mục repo local lên GitHub.
     Sử dụng Token để xác thực.
+    (Phiên bản nâng cấp: Tự động pull --rebase trước khi push)
     """
     if commit_message is None:
         commit_message = f"Auto-update charts {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
@@ -169,14 +170,28 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
         # 1. Mở repo local
         repo = git.Repo(repo_local_path)
         print(f"  Mở repo thành công tại: {repo_local_path}")
+        
+        # 1.5. ĐỒNG BỘ (PULL) TRƯỚC KHI LÀM BẤT CỨ ĐIỀU GÌ
+        # (Rất quan trọng để tránh lỗi "non-fast-forward" trên Actions)
+        print("  Đang đồng bộ (pull) các thay đổi mới nhất từ GitHub...")
+        origin = repo.remote(name='origin')
+        
+        # Cấu hình URL với token để pull (và push)
+        remote_url = f"https"
+        origin.set_url(remote_url)
+        
+        # Chạy "git pull --rebase"
+        origin.pull(rebase=True) 
+        print("  Đồng bộ (pull) thành công.")
+        # --- KẾT THÚC BƯỚC ĐỒNG BỘ ---
 
-        # 2. Kiểm tra xem có thay đổi không
+        # 2. Kiểm tra xem có thay đổi không (do main.py tạo ra)
         if not repo.is_dirty(untracked_files=True):
-            print("  Không có thay đổi nào trong repo. Bỏ qua push.")
+            print("  Không có thay đổi nào (file HTML mới) để push. Bỏ qua.")
             return True
 
         # 3. Thêm tất cả các file (mới hoặc đã sửa)
-        print("  Đang thêm (add) tất cả các thay đổi...")
+        print("  Đang thêm (add) tất cả các thay đổi (thư mục charts/)...")
         repo.git.add(A=True)
         
         # 4. Commit
@@ -185,14 +200,7 @@ def push_to_github(repo_local_path, github_token, github_username, github_repo_n
         
         # 5. Push lên GitHub
         print("  Đang push lên GitHub...")
-        # Tạo URL xác thực (https://<token>@github.com/<username>/<repo_name>.git)
-        remote_url = f"https://{github_token}@github.com/{github_username}/{github_repo_name}.git"
-        
-        # Lấy remote 'origin' và set URL mới (để xác thực)
-        origin = repo.remote(name='origin')
-        origin.set_url(remote_url)
-        
-        # Push
+        # (URL đã được set ở bước 1.5, chỉ cần push)
         origin.push()
         
         print("  Push lên GitHub thành công!")
