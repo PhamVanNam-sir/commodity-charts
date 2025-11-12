@@ -1,0 +1,12 @@
+yfinance
+pandas
+matplotlib
+bokeh
+openpyxl
+requests
+beautifulsoup4
+selenium
+webdriver-manager
+pydrive2
+gitpython
+oauth2client
