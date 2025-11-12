@@ -7,38 +7,38 @@ import os
 
 def authenticate():
     """
-    Xác thực với Google Drive.
+    Xác thực với Google Drive (Phiên bản đã sửa).
     """
-    gauth = GoogleAuth() # 1. Tạo đối tượng
+    gauth = GoogleAuth()
     
-    # 2. THIẾT LẬP QUYỀN 'OFFLINE' TRƯỚC KHI TẢI
-    # Đây là cách chính xác để yêu cầu refresh_token
-    gauth.settings['oauth_scope'] = ['https://www.googleapis.com/auth/drive']
-    gauth.settings['access_type'] = 'offline'
-    gauth.settings['approval_prompt'] = 'force' # Luôn luôn hỏi lại (để đảm bảo)
-
-    # 3. Thử tải credentials đã lưu
+    # 1. Thử tải credentials đã lưu
     try:
         gauth.LoadCredentialsFile("credentials.json")
     except FileNotFoundError:
         pass # Không sao nếu không tìm thấy
 
-    # 4. Kiểm tra
     if gauth.credentials is None:
-        # 5. Đăng nhập (KHÔNG có 'auth_params' nữa)
-        print("  Không tìm thấy credentials, mở trình duyệt để xác thực...")
-        gauth.LocalWebserverAuth() # <--- ĐÂY LÀ DÒNG GỐC (đã bỏ auth_params)
+        # 2. CHƯA CÓ CREDENTIALS (LẦN ĐẦU CHẠY)
+        print("  Không tìm thấy credentials, mở trình duyệt để xác thực LẦN ĐẦU...")
+        
+        # Chỉ định 'offline' để lấy refresh_token
+        # XÓA 'approval_prompt=force'
+        gauth.GetFlow()
+        gauth.flow.params['access_type'] = 'offline' 
+        
+        gauth.LocalWebserverAuth()
         
     elif gauth.access_token_expired:
-        # 6. Làm mới nếu hết hạn
+        # 3. HẾT HẠN -> TỰ ĐỘNG LÀM MỚI
         print("  Access token hết hạn, đang tự động làm mới...")
-        gauth.Refresh()
+        gauth.Refresh() # Sẽ hoạt động nếu 'credentials.json' có refresh_token
     else:
-        # 7. Đã xác thực
+        # 4. VẪN CÒN HẠN
         print("  Đã có thông tin xác thực, đang ủy quyền...")
         gauth.Authorize()
         
-    # 8. Lưu lại (quan trọng)
+    # 5. Lưu lại (quan trọng)
+    # File credentials.json giờ sẽ có refresh_token (sau lần 1)
     print("  Lưu credentials vào file 'credentials.json'...")
     gauth.SaveCredentialsFile("credentials.json")
     
