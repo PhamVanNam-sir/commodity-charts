@@ -1,39 +1,45 @@
-name: Daily Commodity Report
+name: Daily Commodity Report (Build and Deploy)
 
 on:
-  # Chạy vào 3 mốc giờ UTC: 5h (12h trưa VN), 11h (18h tối VN), 22h (5h sáng VN)
+  # Lịch trình chạy (đã sửa)
   schedule:
-    - cron: '0 5,11,22 * * *'
-  # Cho phép chạy thủ công (để test)
+    - cron: '0 5,11,22 * * *' # 5h, 11h, 22h UTC (12h, 18h, 5h VN)
+  # Cho phép chạy thủ công
   workflow_dispatch:
 
-jobs:
-  build-and-run:
-    runs-on: ubuntu-latest # Chạy trên máy ảo Linux (Ubuntu)
+# --- THÊM QUYỀN MỚI ---
+# Cấp quyền cho robot để nó "xuất bản" trang Pages
+permissions:
+  contents: write # (Để push code - như cũ)
+  pages: write    # (MỚI - Để xuất bản Pages)
+  id-token: write # (MỚI - Để xác thực với Pages)
 
+jobs:
+  # --- JOB 1: TẠO FILE (như cũ) ---
+  build-and-run:
+    runs-on: ubuntu-latest
+    
     steps:
       # 1. Lấy code của bạn về
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          # Cần GITHUB_TOKEN để push lại
           token: ${{ secrets.API_TOKEN }} 
 
-      # 2. Cài đặt Python 3.10
+      # 2. Cài đặt Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
-      # 3. Cài đặt các thư viện từ requirements.txt
+      # 3. Cài đặt các thư viện
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          # Cài đặt trình duyệt Chrome cho Selenium
           pip install webdriver-manager
 
-      # 4. TẠO FILE BÍ MẬT (Lấy từ GitHub Secrets)
+      # 4. TẠO FILE BÍ MẬT (Google Drive)
       - name: Create Google Auth Files
         env:
           CLIENT_SECRETS: ${{ secrets.GDRIVE_CLIENT_SECRETS }}
@@ -49,9 +55,36 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "action@github.com"
 
-      # 6. CHẠY SCRIPT CHÍNH
+      # 6. CHẠY SCRIPT CHÍNH (Tạo file .html và .xlsx)
       - name: Run Main Python Script
         env:
           API_TOKEN: ${{ secrets.API_TOKEN }}
         run: |
           python main.py
+
+      # --- BƯỚC 7 (MỚI): GÓI HÀNG (Package) ---
+      # Gói toàn bộ kho lại (bao gồm thư mục 'charts/' mới tạo)
+      # để chuẩn bị gửi cho Robot 2 (Deploy)
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Tải lên toàn bộ thư mục gốc (nơi chứa 'charts/', 'index.html'...)
+          path: '.' 
+
+  # --- JOB 2 (MỚI): XUẤT BẢN TRANG WEB ---
+  deploy:
+    # Job này phải chạy SAU KHI job 'build-and-run' xong
+    needs: build-and-run 
+    runs-on: ubuntu-latest
+    
+    # Chỉ định môi trường là GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+      
+    steps:
+      # 2. Lấy "gói hàng" (artifact) từ Job 1
+      # và xuất bản nó lên trang web
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
