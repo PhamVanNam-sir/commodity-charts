@@ -1,9 +1,9 @@
 name: Daily Commodity Report
 
 on:
-  # Chạy tự động lúc 22:00 UTC (tức 5:00 sáng giờ Việt Nam, UTC+7)
+  # Chạy vào 3 mốc giờ UTC: 5h (12h trưa VN), 11h (18h tối VN), 22h (5h sáng VN)
   schedule:
-    - cron: '0 22 * * *'
+    - cron: '0 5,11,22 * * *'
   # Cho phép chạy thủ công (để test)
   workflow_dispatch:
 
